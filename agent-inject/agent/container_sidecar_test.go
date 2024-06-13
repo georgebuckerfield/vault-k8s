@@ -1224,6 +1224,15 @@ func TestContainerCache(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"init container in sidecar mode",
+			map[string]string{
+				AnnotationVaultRole:          "role",
+				AnnotationAgentPrePopulate:   "true",
+				AnnotationAgentNativeSidecar: "true",
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

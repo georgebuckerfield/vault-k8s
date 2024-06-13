@@ -86,6 +86,8 @@ type Agent struct {
 	// added to the request.
 	PrePopulateOnly bool
 
+	NativeSidecar bool
+
 	// RevokeOnShutdown controls whether a sidecar container will attempt to revoke its Vault
 	// token on shutting down.
 	RevokeOnShutdown bool
@@ -434,6 +436,11 @@ func New(pod *corev1.Pod) (*Agent, error) {
 		return agent, err
 	}
 
+	agent.NativeSidecar, err = agent.nativeSidecar()
+	if err != nil {
+		return agent, err
+	}
+
 	agent.RevokeOnShutdown, err = agent.revokeOnShutdown()
 	if err != nil {
 		return agent, err
@@ -696,7 +703,7 @@ func (a *Agent) Patch() ([]byte, error) {
 	}
 
 	// Sidecar Container
-	if !a.PrePopulateOnly {
+	if !a.PrePopulateOnly && !a.NativeSidecar {
 		container, err := a.ContainerSidecar()
 		if err != nil {
 			return nil, err

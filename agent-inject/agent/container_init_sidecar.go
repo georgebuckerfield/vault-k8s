@@ -73,7 +73,7 @@ func (a *Agent) ContainerInitSidecar() (corev1.Container, error) {
 		volumeMounts = append(volumeMounts, a.cacheVolumeMount())
 	}
 
-	envs, err := a.ContainerEnvVars(true)
+	envs, err := a.ContainerEnvVars(!a.NativeSidecar)
 	if err != nil {
 		return corev1.Container{}, err
 	}
@@ -84,14 +84,16 @@ func (a *Agent) ContainerInitSidecar() (corev1.Container, error) {
 	}
 
 	newContainer := corev1.Container{
-		Name:         "vault-agent-init",
-		Image:        a.ImageName,
-		Env:          envs,
-		Resources:    resources,
-		VolumeMounts: volumeMounts,
-		Command:      []string{"/bin/sh", "-ec"},
-		Args:         []string{arg},
+		Name:          "vault-agent-init",
+		Image:         a.ImageName,
+		Env:           envs,
+		Resources:     resources,
+		VolumeMounts:  volumeMounts,
+		Command:       []string{"/bin/sh", "-ec"},
+		Args:          []string{arg},
+		RestartPolicy: a.initContainerRestartPolicy(),
 	}
+
 	if a.SetSecurityContext {
 		newContainer.SecurityContext = a.securityContext()
 	}
@@ -119,4 +121,12 @@ func (a *Agent) ContainerInitSidecar() (corev1.Container, error) {
 		return newContainer, err
 	}
 	return newContainer, nil
+}
+
+func (a *Agent) initContainerRestartPolicy() *corev1.ContainerRestartPolicy {
+	if a.NativeSidecar {
+		rp := corev1.ContainerRestartPolicyAlways
+		return &rp
+	}
+	return nil
 }

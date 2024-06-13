@@ -107,6 +107,8 @@ const (
 	// starting.
 	AnnotationAgentPrePopulate = "vault.hashicorp.com/agent-pre-populate"
 
+	AnnotationAgentNativeSidecar = "vault.hashicorp.com/agent-native-sidecar"
+
 	// AnnotationAgentPrePopulateOnly controls whether an init container is the only
 	// injected container.  If true, no sidecar container will be injected at runtime
 	// of the application.
@@ -711,6 +713,15 @@ func (a *Agent) prePopulate() (bool, error) {
 
 func (a *Agent) prePopulateOnly() (bool, error) {
 	raw, ok := a.Annotations[AnnotationAgentPrePopulateOnly]
+	if !ok {
+		return false, nil
+	}
+
+	return parseutil.ParseBool(raw)
+}
+
+func (a *Agent) nativeSidecar() (bool, error) {
+	raw, ok := a.Annotations[AnnotationAgentNativeSidecar]
 	if !ok {
 		return false, nil
 	}
